@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitburner Save Modifier</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #111;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 { text-align: center; color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+        .section {
+            background: #222;
+            border: 1px solid #333;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .section h3 { color: #ffff00; border-bottom: 1px solid #ffff00; padding-bottom: 5px; }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 10px;
+            resize: vertical;
+        }
+        input[type="number"], input[type="text"] {
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px;
+            width: 150px;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background: #004400;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            border-radius: 5px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #440000;
+            border: 2px solid #ff0000;
+            color: #ff8888;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #004400;
+            border: 2px solid #00ff00;
+            color: #88ff88;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Bitburner Save Modifier v2.0 🚀</h1>
+        
+        <div class="warning">
+            <strong>⚠️ ATTENTION :</strong> Toujours faire une sauvegarde avant modification !<br>
+            Cet outil modifie votre sauvegarde Bitburner de manière sécurisée.
+        </div>
+
+        <div class="section">
+            <h3>📋 1. Coller votre sauvegarde JSON</h3>
+            <textarea id="saveInput" placeholder="Collez ici votre sauvegarde exportée de Bitburner..."></textarea>
+            <button onclick="parseSave()">🔍 Analyser la sauvegarde</button>
+        </div>
+
+        <div class="section">
+            <h3>💰 2. Modifications rapides</h3>
+            <div class="grid">
+                <div>
+                    <label>Argent: <input type="text" id="money" placeholder="1000000000"></label>
+                </div>
+                <div>
+                    <label>Hacking: <input type="number" id="hacking" placeholder="1000"></label>
+                </div>
+                <div>
+                    <label>Force: <input type="number" id="strength" placeholder="500"></label>
+                </div>
+                <div>
+                    <label>Défense: <input type="number" id="defense" placeholder="500"></label>
+                </div>
+                <div>
+                    <label>Dextérité: <input type="number" id="dexterity" placeholder="500"></label>
+                </div>
+                <div>
+                    <label>Agilité: <input type="number" id="agility" placeholder="500"></label>
+                </div>
+                <div>
+                    <label>Charisme: <input type="number" id="charisma" placeholder="500"></label>
+                </div>
+                <div>
+                    <label>HP Max: <input type="number" id="maxHp" placeholder="1000"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 3. Modifications avancées</h3>
+            <button onclick="addAllPrograms()">📁 Ajouter tous les programmes</button>
+            <button onclick="maxReputation()">⭐ Réputation max (toutes factions)</button>
+            <button onclick="addExploits()">🏆 Ajouter exploits (achievements)</button>
+            <button onclick="upgradeServers()">🖥️ Upgrade serveurs max RAM</button>
+        </div>
+
+        <div class="section">
+            <h3>✅ 4. Appliquer et exporter</h3>
+            <button onclick="applyModifications()">🚀 Appliquer les modifications</button>
+            <button onclick="exportSave()">📤 Exporter la sauvegarde modifiée</button>
+            <button onclick="copyToClipboard()">📋 Copier dans le presse-papier</button>
+        </div>
+
+        <div class="section">
+            <h3>📊 5. Résultat</h3>
+            <textarea id="saveOutput" placeholder="La sauvegarde modifiée apparaîtra ici..." readonly></textarea>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let saveData = null;
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type === 'success' ? 'success' : type === 'error' ? 'warning' : '';
+            statusDiv.innerHTML = `<strong>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</strong> ${message}`;
+            setTimeout(() => statusDiv.innerHTML = '', 5000);
+        }
+
+        function parseSave() {
+            const input = document.getElementById('saveInput').value.trim();
+            if (!input) {
+                showStatus('Veuillez coller votre sauvegarde d\'abord !', 'error');
+                return;
+            }
+
+            try {
+                saveData = JSON.parse(input);
+                if (!saveData.PlayerSave) {
+                    throw new Error('Format de sauvegarde invalide');
+                }
+                
+                // Remplir les champs avec les valeurs actuelles
+                document.getElementById('money').value = saveData.PlayerSave.money || 0;
+                document.getElementById('hacking').value = saveData.PlayerSave.hacking || 1;
+                document.getElementById('strength').value = saveData.PlayerSave.strength || 10;
+                document.getElementById('defense').value = saveData.PlayerSave.defense || 10;
+                document.getElementById('dexterity').value = saveData.PlayerSave.dexterity || 10;
+                document.getElementById('agility').value = saveData.PlayerSave.agility || 10;
+                document.getElementById('charisma').value = saveData.PlayerSave.charisma || 10;
+                document.getElementById('maxHp').value = saveData.PlayerSave.max_hp || 100;
+                
+                showStatus('Sauvegarde analysée avec succès !', 'success');
+            } catch (error) {
+                showStatus('Erreur lors de l\'analyse: ' + error.message, 'error');
+            }
+        }
+
+        function addAllPrograms() {
+            if (!saveData) { showStatus('Analysez d\'abord votre sauvegarde !', 'error'); return; }
+            
+            const allPrograms = [
+                "NUKE.exe", "BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe",
+                "HTTPWorm.exe", "SQLInject.exe", "DeepscanV1.exe", "DeepscanV2.exe",
+                "ServerProfiler.exe", "AutoLink.exe", "Formulas.exe"
+            ];
+            
+            saveData.PlayerSave.programs = allPrograms;
+            showStatus('Tous les programmes ajoutés !', 'success');
+        }
+
+        function maxReputation() {
+            if (!saveData) { showStatus('Analysez d\'abord votre sauvegarde !', 'error'); return; }
+            
+            const factions = ["CyberSec", "NiteSec", "The Black Hand", "BitRunners", "ECorp", "MegaCorp", "Illuminati", "Daedalus"];
+            saveData.PlayerSave.factionRep = saveData.PlayerSave.factionRep || {};
+            
+            factions.forEach(faction => {
+                saveData.PlayerSave.factionRep[faction] = 999999;
+            });
+            
+            showStatus('Réputation maximisée pour toutes les factions !', 'success');
+        }
+
+        function addExploits() {
+            if (!saveData) { showStatus('Analysez d\'abord votre sauvegarde !', 'error'); return; }
+            
+            const exploits = ["Unclickable", "EditSaveFile", "Document", "YoureNotMeantToAccessThis"];
+            saveData.PlayerSave.exploits = [...new Set([...(saveData.PlayerSave.exploits || []), ...exploits])];
+            
+            showStatus('Exploits ajoutés pour les achievements !', 'success');
+        }
+
+        function upgradeServers() {
+            if (!saveData) { showStatus('Analysez d\'abord votre sauvegarde !', 'error'); return; }
+            
+            if (saveData.PlayerSave.purchasedServers) {
+                saveData.PlayerSave.purchasedServers.forEach(server => {
+                    server.maxRam = 1048576; // 1 PB
+                    server.ramUsed = 0;
+                });
+                showStatus('Serveurs upgradés à 1 PB de RAM !', 'success');
+            } else {
+                showStatus('Aucun serveur acheté trouvé', 'error');
+            }
+        }
+
+        function applyModifications() {
+            if (!saveData) { showStatus('Analysez d\'abord votre sauvegarde !', 'error'); return; }
+            
+            // Appliquer les modifications des champs
+            const money = document.getElementById('money').value;
+            if (money) saveData.PlayerSave.money = parseFloat(money);
+            
+            const hacking = document.getElementById('hacking').value;
+            if (hacking) saveData.PlayerSave.hacking = parseInt(hacking);
+            
+            const strength = document.getElementById('strength').value;
+            if (strength) saveData.PlayerSave.strength = parseInt(strength);
+            
+            const defense = document.getElementById('defense').value;
+            if (defense) saveData.PlayerSave.defense = parseInt(defense);
+            
+            const dexterity = document.getElementById('dexterity').value;
+            if (dexterity) saveData.PlayerSave.dexterity = parseInt(dexterity);
+            
+            const agility = document.getElementById('agility').value;
+            if (agility) saveData.PlayerSave.agility = parseInt(agility);
+            
+            const charisma = document.getElementById('charisma').value;
+            if (charisma) saveData.PlayerSave.charisma = parseInt(charisma);
+            
+            const maxHp = document.getElementById('maxHp').value;
+            if (maxHp) {
+                saveData.PlayerSave.max_hp = parseInt(maxHp);
+                saveData.PlayerSave.hp = parseInt(maxHp);
+            }
+            
+            // Mettre à jour l'affichage
+            document.getElementById('saveOutput').value = JSON.stringify(saveData, null, 2);
+            showStatus('Modifications appliquées avec succès !', 'success');
+        }
+
+        function exportSave() {
+            if (!saveData) { showStatus('Aucune modification à exporter !', 'error'); return; }
+            
+            const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bitburner-modified-save.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showStatus('Sauvegarde téléchargée !', 'success');
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('saveOutput').value;
+            if (!output) { showStatus('Aucune sauvegarde à copier !', 'error'); return; }
+            
+            navigator.clipboard.writeText(output).then(() => {
+                showStatus('Sauvegarde copiée dans le presse-papier !', 'success');
+            }).catch(() => {
+                showStatus('Erreur lors de la copie', 'error');
+            });
+        }
+    </script>
+</body>
+</html>
